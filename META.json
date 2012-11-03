@@ -1,5 +1,5 @@
 {
-   "abstract" : "Needlessly OO module to scrape card images off the",
+   "abstract" : "Needlessly OO module to scrape card images off of the",
    "author" : [
       "Satoshi Yagi <satoshi.yagi@yahoo.com>"
    ],
@@ -40,5 +40,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.01"
+   "version" : "0.02"
 }

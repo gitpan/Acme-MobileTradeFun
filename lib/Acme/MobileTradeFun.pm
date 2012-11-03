@@ -14,16 +14,16 @@ use Parallel::ForkManager;
 
 =head1 NAME
 
-Acme::MobileTradeFun - Needlessly OO module to scrape card images off the
+Acme::MobileTradeFun - Needlessly OO module to scrape card images off of the
 MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -35,14 +35,14 @@ http://mobile-trade.jp
 
 This site seems to contain the "official" card images as they show up on the
 mobile devices in Japan.  This module basically lets you specify a game, and
-scrapes all the high quality cards off the site.
+scrapes all the high quality cards off of the site.
 
 Note that card names are stored in Japanese, as each card contains certain
 attributes such as category, card name and rarity.  Without these attributes,
 cards cannot be identified uniquely.
 
 The interface of the module is pretty simple.  You construct a hashref of args,
-and pass it onto the class method run() which will take the rest.
+and pass it onto the class method run() which will take care of the rest.
 
     use Acme::MobileTradeFun;
 

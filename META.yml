@@ -1,5 +1,5 @@
 ---
-abstract: 'Needlessly OO module to scrape card images off the'
+abstract: 'Needlessly OO module to scrape card images off of the'
 author:
   - 'Satoshi Yagi <satoshi.yagi@yahoo.com>'
 build_requires:
@@ -22,4 +22,4 @@ requires:
   Parallel::ForkManager: 0
   URI::Encode: 0
   perl: 5.006
-version: 0.01
+version: 0.02
