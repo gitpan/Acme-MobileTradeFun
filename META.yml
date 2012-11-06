@@ -19,7 +19,8 @@ no_index:
     - inc
 requires:
   Log::Log4perl: 0
+  Mojo::DOM: 0
   Parallel::ForkManager: 0
   URI::Encode: 0
   perl: 5.006
-version: 0.02
+version: 0.03

@@ -21,6 +21,7 @@ WriteMakefile(
         'Log::Log4perl'         => 0,
         'URI::Encode'           => 0,
         'Parallel::ForkManager' => 0,
+        'Mojo::DOM'             => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Acme-MobileTradeFun-*' },

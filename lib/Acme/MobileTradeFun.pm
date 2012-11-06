@@ -11,6 +11,7 @@ use LWP::Simple;
 use Log::Log4perl qw/:easy/;
 use URI::Encode qw/uri_decode/;
 use Parallel::ForkManager;
+use Mojo::DOM;
 
 =head1 NAME
 
@@ -19,11 +20,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -62,7 +63,6 @@ supported: bahamut, idolmaster, saintseiya and gangroad.
     row         => 300,     # how many cards per page
     page        => 1,       # which page to start from
     output_dir  => '/tmp',  # where to save the images
-    card_offset => 10000,   # just an index value.  better left untouched
     parallel    => 1,       # how many cards to fetch at once
     debug       => 0,
 
@@ -105,7 +105,6 @@ sub init {
         row         => 300,
         page        => 1,
         output_dir  => '/tmp',
-        card_offset => 10000, # just some base number from which I can increment
         parallel    => 1,
         debug       => 0,
     };
@@ -113,7 +112,6 @@ sub init {
     %{ $self->{ opts } } = ( %{ $self->{ opts } }, %{ $args } ) if ( $args );
     Log::Log4perl->easy_init($DEBUG) if ( $self->{ opts }->{ debug } );
 
-    $self->{ game_info } = $self->find_game();
     my $out_dir = $self->{ opts }->{ output_dir } . "/" . $self->{ opts }->{ game };
     make_path( $out_dir ) unless( -d $out_dir );
     $self->{ opts }->{ output_dir } = $out_dir; # appending game name as subdir
@@ -132,38 +130,6 @@ sub run {
     my $self = $class->new( $args );
     $self->fetch_cards();
     return $self;
-}
-
-=head2 find_game
-
-    Description: Provides hard-coded game-related info
-    Arguments: none
-    Returns: none, but croaks on failure to look up game info
-
-=cut
-
-sub find_game {
-    my $self = shift;
-    
-    # nested structure is more flexible in case I needed to add more info later
-    my %lookup_table = (
-        bahamut     => {
-            host_ip => '203.131.198.133',
-        },
-        idolmaster  => {
-            host_ip => '125.6.169.35',
-        },
-        saintseiya  => {
-            host_ip => '203.104.255.115',
-        },
-        gangroad    => {
-            host_ip => '203.104.245.115',
-        },
-    );
-
-    my $game = $self->{ opts }->{ game };
-    my $info = $lookup_table{ $game };
-    ( $info ) ? $info : croak "failed to find an IP for $game";
 }
 
 =head2 fetch_cards
@@ -195,12 +161,11 @@ sub fetch_cards {
     }
     
     my $pm = Parallel::ForkManager->new( $self->{ opts }->{ parallel } );
-    my $data = $self->{ data };
-    
-    for my $key ( sort keys %{ $data } ) {
+
+    for my $key ( @{ $self->{ data } } ) {
         $pm->start and next;
-        my $file = "$dir/$data->{ $key }->{ name }";
-        my $url = $data->{ $key }->{ url };
+        my $file = "$dir/$key->{ name }";
+        my $url = $key->{ url };
         my $res = getstore( $url, $file );
         unless ( $res == 200 ) {
             DEBUG "something went wrong with $url";
@@ -221,57 +186,33 @@ sub fetch_cards {
 sub parse_data {
     my ( $self, $html ) = @_;
 
-    my $host_ip = $self->{ game_info }->{ host_ip };
-    my @html = split( /\n/, $html );
-
-    my $category    = "";
-    my $card_name   = "";
-    my $rarity      = "";
-    my $card_found  = 0;
-
-    for my $line ( @html ) {
-        chomp $line;
+    my $card_found = 0;
+    my $dom = Mojo::DOM->new( $html );
+    
+    for my $table ( $dom->find( 'table.card_search_result_table' )->each ) {
+        my $category = ( $table->find( 'span' )->each )[1]->text;
+        my @links = $table->find( 'a' )->each;
+        my $name = $links[0]->text;
+        my $rarity = $links[1]->text;
+        my $link = $links[2]->attrs( 'href' );
         
-        next unless ( $line =~ /href=|font-weight/ );
-
-        if ( $line =~ /font-weight/ && $line =~ /color/ ) {
-            my ( $match ) = $line =~ m|">(\w+)</span>|;
-
-            if ( $match ) {
-                $match =~ s/\s+$//g;
-                $category = $match;
-            }
-            else {
-                DEBUG "could not capture category for $card_name";
-            }
-        }
-        elsif ( $line =~ /card.php/ && $line =~ /_name/ ) {
-            ( $card_name ) = $line =~ />([^<]+?)</;
-            $card_name =~ s/\s+$//g;
-        }
-        elsif ( $line =~ /card.php/ && $line =~ /rarity/ ) {
-            my ( $capture ) = $line =~ />([^<]+?)</;
-            
-            if ( $capture ) {
-                $capture =~ s/\s+$//g;
-                $rarity = $capture;
-            }
-            else {
-                DEBUG "could not capture rarity for $card_name";
-            }
+        unless ( $category && $name && $rarity && $link ) {
+            my $message = "Something is missing:";
+            $message .= " $category" if ( $category );
+            $message .= " $name" if ( $name );
+            $message .= " $rarity" if ( $rarity );
+            $message .= " $link" if ( $link );
+            DEBUG $message;
+            next;
         }
         
-        if ( $line =~ /$host_ip/ ) {
-            my ( $url ) = $line =~ /url=(.*.jpg)/;
-            my $decoded = uri_decode( $url );
-            my $card_offset = $self->{ opts }->{ card_offset }++;
-            my $name = "[$category]$card_name($rarity).jpg";
-            
-            $self->{ data }->{ $card_offset }->{ name } = $name;
-            $self->{ data }->{ $card_offset }->{ url } = $decoded;
-            $card_found++;
-        }
+        my $url = uri_decode( $link );
+        my $card_name = "[$category]$name($rarity).jpg";
+        $card_found++;
+        my $elem = { name => $card_name, url => $url };
+        push @{ $self->{ data } }, $elem;
     }
+
     return $card_found;
 }
 
