@@ -1,5 +1,8 @@
 Revision history for Acme-MobileTradeFun
 
+0.04    2012/11/5
+        Re-added a check to see if game is supplied
+
 0.03    2012/11/5
         Changed scraping mechanism from regex to Mojo::DOM.  Took away card
         offset and game-to-IP mapping as I no longer look for an IP address in

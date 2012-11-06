@@ -20,11 +20,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 SYNOPSIS
@@ -110,8 +110,9 @@ sub init {
     };
 
     %{ $self->{ opts } } = ( %{ $self->{ opts } }, %{ $args } ) if ( $args );
+    croak "game not specified" unless( $self->{ opts }->{ game } );
+    
     Log::Log4perl->easy_init($DEBUG) if ( $self->{ opts }->{ debug } );
-
     my $out_dir = $self->{ opts }->{ output_dir } . "/" . $self->{ opts }->{ game };
     make_path( $out_dir ) unless( -d $out_dir );
     $self->{ opts }->{ output_dir } = $out_dir; # appending game name as subdir
