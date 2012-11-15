@@ -10,7 +10,8 @@ use File::Path qw/make_path/;
 use LWP::Simple;
 use Log::Log4perl qw/:easy/;
 use URI::Encode qw/uri_decode/;
-use Parallel::ForkManager;
+use AnyEvent;
+use AnyEvent::HTTP;
 use Mojo::DOM;
 
 =head1 NAME
@@ -20,11 +21,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
@@ -49,7 +50,6 @@ and pass it onto the class method run() which will take care of the rest.
 
     my $args = {
         game        => 'idolmaster',
-        parallel    => 10,
     };
 
     my $foo = Acme::MobileTradeFun->run( $args );
@@ -63,7 +63,6 @@ supported: bahamut, idolmaster, saintseiya and gangroad.
     row         => 300,     # how many cards per page
     page        => 1,       # which page to start from
     output_dir  => '/tmp',  # where to save the images
-    parallel    => 1,       # how many cards to fetch at once
     debug       => 0,
 
 
@@ -105,7 +104,6 @@ sub init {
         row         => 300,
         page        => 1,
         output_dir  => '/tmp',
-        parallel    => 1,
         debug       => 0,
     };
 
@@ -161,19 +159,28 @@ sub fetch_cards {
         $page++;
     }
     
-    my $pm = Parallel::ForkManager->new( $self->{ opts }->{ parallel } );
+    my $cv = AE::cv {
+        DEBUG "fetched all cards!";
+    };
 
     for my $key ( @{ $self->{ data } } ) {
-        $pm->start and next;
-        my $file = "$dir/$key->{ name }";
+        $cv->begin;
         my $url = $key->{ url };
-        my $res = getstore( $url, $file );
-        unless ( $res == 200 ) {
-            DEBUG "something went wrong with $url";
+        http_get $url, sub {
+            my ( $data, $hdr ) = @_;
+            if ( $hdr->{ Status } =~ /^2/ ) {
+                my $file = "$dir/$key->{ name }";
+                open( my $fh, ">", $file ) or croak "couldn't open $file: $!";
+                print $fh $data;
+                close $fh or croak "couldn't close $file: $!";
+            }
+            else {
+                DEBUG "something went wrong with $url";
+            }
+            $cv->end;
         }
-        $pm->finish;
     }
-    $pm->wait_all_children;
+    $cv->recv;
 }
 
 =head2 parse_data

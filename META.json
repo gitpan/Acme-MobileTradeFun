@@ -32,14 +32,15 @@
       },
       "runtime" : {
          "requires" : {
+            "AnyEvent" : "0",
+            "AnyEvent::HTTP" : "0",
             "Log::Log4perl" : "0",
             "Mojo::DOM" : "0",
-            "Parallel::ForkManager" : "0",
             "URI::Encode" : "0",
             "perl" : "5.006"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.04"
+   "version" : "0.05"
 }

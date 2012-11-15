@@ -1,5 +1,8 @@
 Revision history for Acme-MobileTradeFun
 
+0.05    2012/11/14
+        Switched the fetching mechanism from forking to event-driven
+
 0.04    2012/11/5
         Re-added a check to see if game is supplied
 
