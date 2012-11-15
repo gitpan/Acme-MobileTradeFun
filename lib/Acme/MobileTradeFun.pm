@@ -3,11 +3,10 @@ package Acme::MobileTradeFun;
 use 5.006;
 use strict;
 use warnings;
-use autodie;
 use Data::Dumper;
 use Carp;
-use File::Path qw/make_path/;
 use LWP::Simple;
+use File::Path qw/make_path/;
 use Log::Log4perl qw/:easy/;
 use URI::Encode qw/uri_decode/;
 use AnyEvent;
@@ -21,11 +20,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS

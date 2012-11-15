@@ -18,6 +18,7 @@ WriteMakefile(
         'Test::More' => 0,
     },
     PREREQ_PM => {
+        'LWP::Simple'           => 0,
         'Log::Log4perl'         => 0,
         'URI::Encode'           => 0,
         'AnyEvent'              => 0,

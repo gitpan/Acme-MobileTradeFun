@@ -1,5 +1,8 @@
 Revision history for Acme-MobileTradeFun
 
+0.06    2012/11/14
+        Cleaned up the modules used and fixed PREREQ_PM
+
 0.05    2012/11/14
         Switched the fetching mechanism from forking to event-driven
 
