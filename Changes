@@ -1,5 +1,9 @@
 Revision history for Acme-MobileTradeFun
 
+0.07    2012/12/3
+        Improved the parsing of categories to work with mixed versions of PHP
+        codes at mobile-trade.jp
+
 0.06    2012/11/14
         Cleaned up the modules used and fixed PREREQ_PM
 

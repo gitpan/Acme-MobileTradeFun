@@ -25,4 +25,4 @@ requires:
   Mojo::DOM: 0
   URI::Encode: 0
   perl: 5.006
-version: 0.06
+version: 0.07

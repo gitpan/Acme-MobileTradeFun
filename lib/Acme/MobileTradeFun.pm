@@ -20,11 +20,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.06
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 
 =head1 SYNOPSIS
@@ -59,7 +59,7 @@ supported: bahamut, idolmaster, saintseiya and gangroad.
     game        => '',
     base_url    => 'http://mobile-trade.jp/fun',
     php_script  => 'card.php',
-    row         => 300,     # how many cards per page
+    row         => 100,     # how many cards per page
     page        => 1,       # which page to start from
     output_dir  => '/tmp',  # where to save the images
     debug       => 0,
@@ -100,7 +100,7 @@ sub init {
         game        => '',
         base_url    => 'http://mobile-trade.jp/fun',
         php_script  => 'card.php',
-        row         => 300,
+        row         => 100,
         page        => 1,
         output_dir  => '/tmp',
         debug       => 0,
@@ -197,7 +197,15 @@ sub parse_data {
     my $dom = Mojo::DOM->new( $html );
     
     for my $table ( $dom->find( 'table.card_search_result_table' )->each ) {
-        my $category = ( $table->find( 'span' )->each )[1]->text;
+        my $category;
+
+        # for each span in the table, I am looking for style attribute with
+        # color in it -- this should be the tag with category in it
+        for my $span ( $table->find( 'span' )->each ) {
+            my $color = $span->{ style };
+            $category = $span->text if ( $color && $color =~ /color/ );
+        }
+
         my @links = $table->find( 'a' )->each;
         my $name = $links[0]->text;
         my $rarity = $links[1]->text;
