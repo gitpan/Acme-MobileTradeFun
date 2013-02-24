@@ -24,6 +24,7 @@ WriteMakefile(
         'AnyEvent'              => 0,
         'AnyEvent::HTTP'        => 0,
         'Mojo::DOM'             => 0,
+        'Encode'                => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Acme-MobileTradeFun-*' },

@@ -12,6 +12,7 @@ use URI::Encode qw/uri_decode/;
 use AnyEvent;
 use AnyEvent::HTTP;
 use Mojo::DOM;
+use Encode;
 
 =head1 NAME
 
@@ -20,11 +21,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 
 =head1 SYNOPSIS
@@ -126,8 +127,49 @@ sub init {
 sub run {
     my ( $class, $args ) = @_;
     my $self = $class->new( $args );
+    $self->load_existing_cards();
     $self->fetch_cards();
     return $self;
+}
+
+=head2 load_existing_cards
+
+    Loads existing cards into $self->{ cards } array.
+    Arguments: none
+    Returns: none
+
+=cut
+
+sub load_existing_cards {
+    my $self = shift;
+
+    my $dir = $self->{ opts }->{ output_dir };
+    opendir( my $dh, $dir );
+    
+    while( my $file = readdir( $dh ) ) {
+        # need to decode UTF-8 to internal format
+        $file = decode( 'UTF-8', $file );
+        push @{ $self->{ cards } }, $file if ( $file =~ /\.jpg$/ );
+    }
+}
+
+=head2 is_new_card
+
+    Determines if a card is new or not
+    Arguments: card name
+    Returns: 1 if new card, 0 otherwise
+
+=cut
+
+sub is_new_card {
+    my ( $self, $card ) = @_;
+    
+    my @cards = @{ $self->{ cards } };
+    
+    for my $pile ( @cards ) {
+        return 0 if ( $card eq $pile );
+    }
+    return 1;
 }
 
 =head2 fetch_cards
@@ -158,6 +200,11 @@ sub fetch_cards {
         $page++;
     }
     
+    unless( $self->{ data } ) {
+        DEBUG "no card to fetch, exiting";
+        return;
+    }
+
     my $cv = AE::cv {
         DEBUG "fetched all cards!";
     };
@@ -223,9 +270,13 @@ sub parse_data {
         
         my $url = uri_decode( $link );
         my $card_name = "[$category]$name($rarity).jpg";
+        $card_name =~ s/\s+//g; # sometimes bunch of spaces creep in
         $card_found++;
-        my $elem = { name => $card_name, url => $url };
-        push @{ $self->{ data } }, $elem;
+
+        if ( $self->is_new_card( $card_name ) ) {
+            my $elem = { name => $card_name, url => $url };
+            push @{ $self->{ data } }, $elem;
+        }
     }
 
     return $card_found;

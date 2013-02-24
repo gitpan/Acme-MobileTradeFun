@@ -34,6 +34,7 @@
          "requires" : {
             "AnyEvent" : "0",
             "AnyEvent::HTTP" : "0",
+            "Encode" : "0",
             "LWP::Simple" : "0",
             "Log::Log4perl" : "0",
             "Mojo::DOM" : "0",
@@ -43,5 +44,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.08"
+   "version" : "0.09"
 }

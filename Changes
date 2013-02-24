@@ -1,28 +1,32 @@
 Revision history for Acme-MobileTradeFun
 
+0.09    2013/2/23
+        Added ability to only fetch new cards, instead of everything.  Removed
+        spaces from card names in case they creep in.
+
 0.08    2013/1/29
-        Added basic tests for the constructor
+        Added basic tests for the constructor.
 
 0.07    2012/12/3
         Improved the parsing of categories to work with mixed versions of PHP
-        codes at mobile-trade.jp
+        codes at mobile-trade.jp.
 
 0.06    2012/11/14
-        Cleaned up the modules used and fixed PREREQ_PM
+        Cleaned up the modules used and fixed PREREQ_PM.
 
 0.05    2012/11/14
-        Switched the fetching mechanism from forking to event-driven
+        Switched the fetching mechanism from forking to event-driven.
 
 0.04    2012/11/5
-        Re-added a check to see if game is supplied
+        Re-added a check to see if game is supplied.
 
 0.03    2012/11/5
         Changed scraping mechanism from regex to Mojo::DOM.  Took away card
         offset and game-to-IP mapping as I no longer look for an IP address in
-        the links
+        the links.
 
 0.02    2012/11/2
-        Fixing POD
+        Fixing POD.
         
 0.01    2012/11/2
-        Initial version
+        Initial version.

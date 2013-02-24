@@ -31,11 +31,9 @@ supported: bahamut, idolmaster, saintseiya and gangroad.
     game        => '',
     base_url    => 'http://mobile-trade.jp/fun',
     php_script  => 'card.php',
-    row         => 300,     # how many cards per page
+    row         => 100,     # how many cards per page
     page        => 1,       # which page to start from
     output_dir  => '/tmp',  # where to save the images
-    card_offset => 10000,   # just an index value.  better left untouched
-    parallel    => 1,       # how many cards to fetch at once
     debug       => 0,
 
 INSTALLATION
