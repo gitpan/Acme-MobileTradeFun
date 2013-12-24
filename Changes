@@ -1,5 +1,8 @@
 Revision history for Acme-MobileTradeFun
 
+0.10    2013/12/23
+        Updated Mojo::DOM::attr from attrs per API change
+
 0.09    2013/2/23
         Added ability to only fetch new cards, instead of everything.  Removed
         spaces from card names in case they creep in.

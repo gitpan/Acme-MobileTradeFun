@@ -21,11 +21,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.09
+Version 0.10
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 
 =head1 SYNOPSIS
@@ -256,7 +256,7 @@ sub parse_data {
         my @links = $table->find( 'a' )->each;
         my $name = $links[0]->text;
         my $rarity = $links[1]->text;
-        my $link = $links[2]->attrs( 'href' );
+        my $link = $links[2]->attr( 'href' );
         
         unless ( $category && $name && $rarity && $link ) {
             my $message = "Something is missing:";
