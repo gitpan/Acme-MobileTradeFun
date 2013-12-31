@@ -21,11 +21,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.10
+Version 0.11
 
 =cut
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 
 =head1 SYNOPSIS
@@ -70,9 +70,7 @@ supported: bahamut, idolmaster, saintseiya and gangroad.
 
 =head2 new
 
-    Description: The constructor.
-    Arguments: hashref, which gets passed into init()
-    Returns: object
+    The constructor
 
 =cut
 
@@ -86,9 +84,7 @@ sub new {
 
 =head2 init
 
-    Description: Sets up default args, overrides, validates args etc
-    Arguments: Hashref
-    Returns: none, but may croak on bad input
+    Sets up default args, overrides, validates args etc
 
 =cut
 
@@ -118,9 +114,7 @@ sub init {
 
 =head2 run
 
-    Description: The driver method.  Calls new then other methods to drive.
-    Arguments: none
-    Returns: object
+    The driver method.  Calls new then other methods to drive.
 
 =cut
 
@@ -135,8 +129,6 @@ sub run {
 =head2 load_existing_cards
 
     Loads existing cards into $self->{ cards } array.
-    Arguments: none
-    Returns: none
 
 =cut
 
@@ -156,8 +148,6 @@ sub load_existing_cards {
 =head2 is_new_card
 
     Determines if a card is new or not
-    Arguments: card name
-    Returns: 1 if new card, 0 otherwise
 
 =cut
 
@@ -174,9 +164,7 @@ sub is_new_card {
 
 =head2 fetch_cards
 
-    Description: Wrapper method to initiate the fetching of cards
-    Arguments: none
-    Returns: none, but may croak on errors
+    Wrapper method to initiate the fetching of cards
 
 =cut
 
@@ -231,9 +219,7 @@ sub fetch_cards {
 
 =head2 parse_data
 
-    Description: parses HTML, populates $self->{ data } hash
-    Arguments: HTML
-    Returns: number of cards found.
+    parses HTML, populates $self->{ data } hash
 
 =cut
 
@@ -330,7 +316,7 @@ L<http://search.cpan.org/dist/Acme-MobileTradeFun/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2012 Satoshi Yagi.
+Copyright 2012-2013 Satoshi Yagi.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the the Artistic License (2.0). You may obtain a
