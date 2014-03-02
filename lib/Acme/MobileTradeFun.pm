@@ -8,11 +8,11 @@ use Carp;
 use LWP::Simple;
 use File::Path qw/make_path/;
 use Log::Log4perl qw/:easy/;
-use URI::Encode qw/uri_decode/;
 use AnyEvent;
 use AnyEvent::HTTP;
-use Mojo::DOM;
 use Encode;
+use Acme::MobileTradeFun::NewParser;
+use Acme::MobileTradeFun::OldParser;
 
 =head1 NAME
 
@@ -21,11 +21,11 @@ MobileTradeFun site
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 
 =head1 SYNOPSIS
@@ -58,7 +58,7 @@ Here are the overwritable defaults in the hashref.  Currently 4 games are
 supported: bahamut, idolmaster, saintseiya and gangroad.
 
     game        => '',
-    base_url    => 'http://mobile-trade.jp/fun',
+    base_url    => 'http://mobile-trade.jp',
     php_script  => 'card.php',
     row         => 100,     # how many cards per page
     page        => 1,       # which page to start from
@@ -95,7 +95,7 @@ sub init {
 
     $self->{ opts } = {
         game        => '',
-        base_url    => 'http://mobile-trade.jp/fun',
+        base_url    => 'http://mobile-trade.jp',
         php_script  => 'card.php',
         row         => 100,
         page        => 1,
@@ -104,12 +104,36 @@ sub init {
     };
 
     %{ $self->{ opts } } = ( %{ $self->{ opts } }, %{ $args } ) if ( $args );
-    croak "game not specified" unless( $self->{ opts }->{ game } );
+    
+    my $game = $self->{ opts }->{ game };
+    croak "game not specified" unless( $game );
+    
+    $self->{ parser } = $self->_parser_strategy( $game );
     
     Log::Log4perl->easy_init($DEBUG) if ( $self->{ opts }->{ debug } );
     my $out_dir = $self->{ opts }->{ output_dir } . "/" . $self->{ opts }->{ game };
     make_path( $out_dir ) unless( -d $out_dir );
     $self->{ opts }->{ output_dir } = $out_dir; # appending game name as subdir
+}
+
+sub _parser_strategy {
+    my ( $self, $game ) = @_;
+    
+    my @newparser_games = qw/
+        mobamasu
+    /;
+    
+    my @oldparser_games = qw/
+        saintseiya
+    /;
+    
+    return Acme::MobileTradeFun::NewParser->new() if ( grep( /$game/, @newparser_games ) );
+    
+    if ( grep( /$game/, @oldparser_games ) ) {
+        $self->{ opts }->{ base_url } .= "/fun";
+        return Acme::MobileTradeFun::OldParser->new();
+    }
+    croak "could not find parser for $game";
 }
 
 =head2 run
@@ -145,23 +169,6 @@ sub load_existing_cards {
     }
 }
 
-=head2 is_new_card
-
-    Determines if a card is new or not
-
-=cut
-
-sub is_new_card {
-    my ( $self, $card ) = @_;
-    
-    my @cards = @{ $self->{ cards } };
-    
-    for my $pile ( @cards ) {
-        return 0 if ( $card eq $pile );
-    }
-    return 1;
-}
-
 =head2 fetch_cards
 
     Wrapper method to initiate the fetching of cards
@@ -177,27 +184,33 @@ sub fetch_cards {
     my $row         = $self->{ opts }->{ row };
     my $game        = $self->{ opts }->{ game };
     my $dir         = $self->{ opts }->{ output_dir };
-    
-    # scrape the pages from PHP, populate all the card data
+    my $parser      = $self->{ parser };
+
+    my @newcards;
+
     while( 1 ) {
         my $url = "$base_url/$game/$script?row=$row&page=$page";
         my $data = get( $url );
-        my $cards = $self->parse_data( $data );
+        my ( $cards, @new ) = $parser->parse_data( $data, $self->{ cards } );
+        push @newcards, @new;
         DEBUG "scraping $url.  $cards found.";
         last unless ( $cards );
         $page++;
     }
-    
-    unless( $self->{ data } ) {
+
+    unless( @newcards ) {
         DEBUG "no card to fetch, exiting";
         return;
     }
+    
+    my $numcards = @newcards;
+    DEBUG "we have $numcards new cards.  fetch starting...";
 
     my $cv = AE::cv {
         DEBUG "fetched all cards!";
     };
 
-    for my $key ( @{ $self->{ data } } ) {
+    for my $key ( @newcards ) {
         $cv->begin;
         my $url = $key->{ url };
         http_get $url, sub {
@@ -215,57 +228,6 @@ sub fetch_cards {
         }
     }
     $cv->recv;
-}
-
-=head2 parse_data
-
-    parses HTML, populates $self->{ data } hash
-
-=cut
-
-sub parse_data {
-    my ( $self, $html ) = @_;
-
-    my $card_found = 0;
-    my $dom = Mojo::DOM->new( $html );
-    
-    for my $table ( $dom->find( 'table.card_search_result_table' )->each ) {
-        my $category;
-
-        # for each span in the table, I am looking for style attribute with
-        # color in it -- this should be the tag with category in it
-        for my $span ( $table->find( 'span' )->each ) {
-            my $color = $span->{ style };
-            $category = $span->text if ( $color && $color =~ /color/ );
-        }
-
-        my @links = $table->find( 'a' )->each;
-        my $name = $links[0]->text;
-        my $rarity = $links[1]->text;
-        my $link = $links[2]->attr( 'href' );
-        
-        unless ( $category && $name && $rarity && $link ) {
-            my $message = "Something is missing:";
-            $message .= " $category" if ( $category );
-            $message .= " $name" if ( $name );
-            $message .= " $rarity" if ( $rarity );
-            $message .= " $link" if ( $link );
-            DEBUG $message;
-            next;
-        }
-        
-        my $url = uri_decode( $link );
-        my $card_name = "[$category]$name($rarity).jpg";
-        $card_name =~ s/\s+//g; # sometimes bunch of spaces creep in
-        $card_found++;
-
-        if ( $self->is_new_card( $card_name ) ) {
-            my $elem = { name => $card_name, url => $url };
-            push @{ $self->{ data } }, $elem;
-        }
-    }
-
-    return $card_found;
 }
 
 =head1 AUTHOR

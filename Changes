@@ -1,5 +1,9 @@
 Revision history for Acme-MobileTradeFun
 
+0.12    2014/3/1
+        Refactored parser into strategy pattern.  The upstream generates
+        2 kinds of HTMLs and parsing had to be adopted.
+
 0.11    2013/12/30
         Updated comments per Uncle Bob's style
 
